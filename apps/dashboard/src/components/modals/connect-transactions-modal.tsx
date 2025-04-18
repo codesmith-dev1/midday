@@ -4,7 +4,6 @@ import { createPlaidLinkTokenAction } from "@/actions/institutions/create-plaid-
 import { exchangePublicToken } from "@/actions/institutions/exchange-public-token";
 import { getInstitutions } from "@/actions/institutions/get-institutions";
 import { useConnectParams } from "@/hooks/use-connect-params";
-import type { Institutions } from "@midday-ai/engine/resources/institutions/institutions";
 import { track } from "@midday/events/client";
 import { LogEvents } from "@midday/events/events";
 import { Button } from "@midday/ui/button";
@@ -42,13 +41,28 @@ function SearchSkeleton() {
   );
 }
 
+function formatProvider(provider: string) {
+  switch (provider) {
+    case "enablebanking":
+      return "Enable Banking";
+    case "gocardless":
+      return "GoCardLess";
+    case "plaid":
+      return "Plaid";
+    case "teller":
+      return "Teller";
+  }
+}
+
 type SearchResultProps = {
   id: string;
   name: string;
   logo: string | null;
   provider: string;
   availableHistory: number;
+  maximumConsentValidity: number;
   openPlaid: () => void;
+  type?: "personal" | "business";
 };
 
 function SearchResult({
@@ -58,6 +72,8 @@ function SearchResult({
   provider,
   availableHistory,
   openPlaid,
+  maximumConsentValidity,
+  type,
 }: SearchResultProps) {
   return (
     <div className="flex justify-between">
@@ -68,7 +84,8 @@ function SearchResult({
           <p className="text-sm font-medium leading-none">{name}</p>
           <InstitutionInfo provider={provider}>
             <span className="text-[#878787] text-xs capitalize">
-              Via {provider}
+              Via {formatProvider(provider)}
+              {type ? ` • ${type}` : ""}
             </span>
           </InstitutionInfo>
         </div>
@@ -76,9 +93,12 @@ function SearchResult({
 
       <ConnectBankProvider
         id={id}
+        name={name}
         provider={provider}
         openPlaid={openPlaid}
+        maximumConsentValidity={maximumConsentValidity}
         availableHistory={availableHistory}
+        type={type}
       />
     </div>
   );
@@ -88,12 +108,22 @@ type ConnectTransactionsModalProps = {
   countryCode: string;
 };
 
+type Institution = {
+  id: string;
+  name: string;
+  logo: string | null;
+  provider: string;
+  available_history?: number;
+  maximum_consent_validity?: number;
+  type?: "personal" | "business";
+};
+
 export function ConnectTransactionsModal({
   countryCode: initialCountryCode,
 }: ConnectTransactionsModalProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [results, setResults] = useState<Institutions["data"]>([]);
+  const [results, setResults] = useState<Institution[]>([]);
   const [plaidToken, setPlaidToken] = useState<string | undefined>();
 
   const {
@@ -162,10 +192,11 @@ export function ConnectTransactionsModal({
   async function fetchData(query?: string) {
     try {
       setLoading(true);
-      const { data } = await getInstitutions({ countryCode, query });
+      // Fix the destructuring to handle the response structure correctly
+      const response = await getInstitutions({ countryCode, query });
       setLoading(false);
 
-      setResults(data);
+      setResults(response.data || []);
     } catch {
       setLoading(false);
       setResults([]);
@@ -173,8 +204,9 @@ export function ConnectTransactionsModal({
   }
 
   useEffect(() => {
+    // Fix the condition by properly grouping the expressions
     if (
-      (isOpen && !results?.length > 0) ||
+      (isOpen && (!results || results.length === 0)) ||
       countryCode !== initialCountryCode
     ) {
       fetchData();
@@ -250,7 +282,7 @@ export function ConnectTransactionsModal({
               <div className="h-[430px] space-y-4 overflow-auto scrollbar-hide pt-2 mt-2">
                 {loading && <SearchSkeleton />}
 
-                {results?.map((institution) => {
+                {results?.map((institution: Institution) => {
                   if (!institution) {
                     return null;
                   }
@@ -262,11 +294,19 @@ export function ConnectTransactionsModal({
                       name={institution.name}
                       logo={institution.logo}
                       provider={institution.provider}
+                      // GoCardLess
                       availableHistory={
                         institution.available_history
                           ? +institution.available_history
                           : 0
                       }
+                      // EnableBanking
+                      maximumConsentValidity={
+                        institution.maximum_consent_validity
+                          ? +institution.maximum_consent_validity
+                          : 0
+                      }
+                      type={institution?.type}
                       openPlaid={() => {
                         setParams({ step: null });
                         openPlaid();

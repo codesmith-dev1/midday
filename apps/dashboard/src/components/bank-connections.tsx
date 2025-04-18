@@ -25,6 +25,7 @@ import { parseAsString, useQueryStates } from "nuqs";
 import { useEffect, useState } from "react";
 import { BankAccount } from "./bank-account";
 import { BankLogo } from "./bank-logo";
+import { DeleteConnection } from "./delete-connection";
 import { ReconnectProvider } from "./reconnect-provider";
 import { SyncTransactions } from "./sync-transactions";
 
@@ -37,6 +38,7 @@ interface BankConnectionProps {
     expires_at?: string;
     enrollment_id: string | null;
     institution_id: string;
+    reference_id?: string;
     last_accessed?: string;
     access_token: string | null;
     error?: string;
@@ -278,6 +280,7 @@ export function BankConnection({ connection }: BankConnectionProps) {
               institutionId={connection.institution_id}
               accessToken={connection.access_token}
               onManualSync={handleManualSync}
+              referenceId={connection.reference_id}
             />
           ) : (
             <>
@@ -288,11 +291,13 @@ export function BankConnection({ connection }: BankConnectionProps) {
                 institutionId={connection.institution_id}
                 accessToken={connection.access_token}
                 onManualSync={handleManualSync}
+                referenceId={connection.reference_id}
               />
               <SyncTransactions
                 disabled={isSyncing}
                 onClick={handleManualSync}
               />
+              <DeleteConnection connectionId={connection.id} />
             </>
           )}
         </div>

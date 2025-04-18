@@ -2,13 +2,13 @@ import { AssistantButton } from "@/components/assistant/button";
 import { DesktopAssistantButton } from "@/components/assistant/button-desktop";
 import { ConnectionStatus } from "@/components/connection-status";
 import { NotificationCenter } from "@/components/notification-center";
+import { Trial } from "@/components/trial";
 import { UserMenu } from "@/components/user-menu";
 import { BrowserNavigation } from "@/desktop/components/browser-navigation";
 import { Skeleton } from "@midday/ui/skeleton";
 import { isDesktopApp } from "@todesktop/client-core/platform/todesktop";
 import { Suspense } from "react";
 import { DesktopTrafficLight } from "./desktop-traffic-light";
-import { FeedbackForm } from "./feedback-form";
 import { MobileMenu } from "./mobile-menu";
 
 export function Header() {
@@ -24,7 +24,9 @@ export function Header() {
       <div className="flex space-x-2 ml-auto">
         {isDesktopApp() && <DesktopAssistantButton />}
 
-        <FeedbackForm />
+        <Suspense>
+          <Trial />
+        </Suspense>
 
         <Suspense>
           <ConnectionStatus />

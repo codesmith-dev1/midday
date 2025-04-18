@@ -2,23 +2,30 @@ import { updateInstitutionUsageAction } from "@/actions/institutions/update-inst
 import { useConnectParams } from "@/hooks/use-connect-params";
 import { useAction } from "next-safe-action/hooks";
 import { BankConnectButton } from "./bank-connect-button";
+import { EnableBankingConnect } from "./enablebanking-connect";
 import { GoCardLessConnect } from "./gocardless-connect";
 import { TellerConnect } from "./teller-connect";
 
 type Props = {
   id: string;
+  name: string;
   provider: string;
   availableHistory: number;
+  maximumConsentValidity: number;
   openPlaid: () => void;
+  type?: "personal" | "business";
 };
 
 export function ConnectBankProvider({
   id,
+  name,
   provider,
   openPlaid,
   availableHistory,
+  maximumConsentValidity,
+  type,
 }: Props) {
-  const { setParams } = useConnectParams();
+  const { setParams, countryCode } = useConnectParams();
   const updateInstitutionUsage = useAction(updateInstitutionUsageAction);
 
   const updateUsage = () => {
@@ -45,6 +52,19 @@ export function ConnectBankProvider({
         <GoCardLessConnect
           id={id}
           availableHistory={availableHistory}
+          onSelect={() => {
+            updateUsage();
+          }}
+        />
+      );
+    }
+    case "enablebanking": {
+      return (
+        <EnableBankingConnect
+          id={name}
+          country={countryCode}
+          maximumConsentValidity={maximumConsentValidity}
+          type={type}
           onSelect={() => {
             updateUsage();
           }}

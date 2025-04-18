@@ -145,3 +145,69 @@ export const GoCardLessAgreementSchema = z
     }),
   })
   .openapi("GoCardLessAgreementSchema");
+
+export const EnableBankingLinkBodySchema = z
+  .object({
+    institutionId: z.string().openapi({
+      example: "REVOLUT_REVOGB21",
+    }),
+    country: z.string().openapi({
+      example: "GB",
+    }),
+    teamId: z.string().openapi({
+      example: "1234567890",
+    }),
+    validUntil: z.string().openapi({
+      example: "2024-01-01",
+    }),
+    type: z.enum(["personal", "business"]).openapi({
+      example: "personal",
+    }),
+    state: z.string().openapi({
+      example: "1234567890",
+      description:
+        "Arbitrary string. Same string will be returned in query parameter when redirecting to the URL passed via redirect_url parameter",
+    }),
+  })
+  .openapi("EnableBankingLinkBodySchema");
+
+export const EnableBankingLinkResponseSchema = z
+  .object({
+    data: z.object({
+      url: z.string().openapi({
+        example: "https://ob.enablebanking.com/psd2/start/234234234",
+      }),
+    }),
+  })
+  .openapi("EnableBankingLinkResponseSchema");
+
+export const EnableBankingSessionQuerySchema = z
+  .object({
+    code: z.string().openapi({
+      example: "234234234",
+    }),
+  })
+  .openapi("EnableBankingSessionQuerySchema");
+
+export const EnableBankingSessionSchema = z
+  .object({
+    data: z.object({
+      session_id: z.string().openapi({
+        example: "234234234",
+      }),
+      expires_at: z.string().openapi({
+        example: "2024-01-01",
+      }),
+      accounts: z.array(
+        z.object({
+          account_reference: z.string().openapi({
+            example: "234234234",
+          }),
+          account_id: z.string().openapi({
+            example: "234234234",
+          }),
+        }),
+      ),
+    }),
+  })
+  .openapi("EnableBankingSessionSchema");

@@ -7,7 +7,9 @@ import { createRoute } from "@hono/zod-openapi";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { env } from "hono/adapter";
 import {
+  InstitutionByIdParamsSchema,
   InstitutionParamsSchema,
+  InstitutionSchema,
   InstitutionsSchema,
   UpdateUsageParamsSchema,
   UpdateUsageSchema,
@@ -19,8 +21,11 @@ type Document = {
   name: string;
   logo: string | null;
   available_history: number | null;
+  maximum_consent_validity: number | null;
   provider: Providers;
   popularity: number;
+  countries: string[];
+  type?: "personal" | "business";
 };
 
 type SearchResult = {
@@ -68,6 +73,7 @@ const app = new OpenAPIHono<{ Bindings: Bindings }>()
         query_by: "name",
         filter_by: `countries:=[${countryCode}]`,
         limit: +limit,
+        sort_by: "popularity:desc",
       };
 
       try {
@@ -95,7 +101,11 @@ const app = new OpenAPIHono<{ Bindings: Bindings }>()
               available_history: document.available_history
                 ? +document.available_history
                 : null,
+              maximum_consent_validity: document.maximum_consent_validity
+                ? +document.maximum_consent_validity
+                : null,
               provider: document.provider,
+              type: document.type,
             })),
           },
           200,
@@ -146,22 +156,22 @@ const app = new OpenAPIHono<{ Bindings: Bindings }>()
           .documents(id)
           .retrieve();
 
-        const originalData: Document =
-          typeof original === "string" && JSON.parse(original);
-
         const result = await typesense
           .collections("institutions")
           .documents(id)
           .update({
-            popularity: originalData?.popularity + 1 || 0,
+            // @ts-ignore
+            popularity: (original?.popularity ?? 0) + 1,
           });
 
-        const data: Document =
-          typeof result === "string" ? JSON.parse(result) : [];
+        const data = result as Document;
 
         return c.json(
           {
-            data,
+            data: {
+              ...data,
+              country: data.countries.at(0),
+            },
           },
           200,
         );
@@ -169,6 +179,73 @@ const app = new OpenAPIHono<{ Bindings: Bindings }>()
         const errorResponse = createErrorResponse(error, c.get("requestId"));
 
         return c.json(errorResponse, 400);
+      }
+    },
+  )
+  .openapi(
+    createRoute({
+      method: "get",
+      path: "/:id",
+      summary: "Get Institution by ID",
+      request: {
+        params: InstitutionByIdParamsSchema,
+      },
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              schema: InstitutionSchema,
+            },
+          },
+          description: "Retrieve institution by id",
+        },
+        404: {
+          content: {
+            "application/json": {
+              schema: ErrorSchema,
+            },
+          },
+          description: "Institution not found",
+        },
+        400: {
+          content: {
+            "application/json": {
+              schema: ErrorSchema,
+            },
+          },
+          description: "Institution not found",
+        },
+      },
+    }),
+    async (c) => {
+      const envs = env(c);
+      const { id } = c.req.valid("param");
+      const requestId = c.get("requestId");
+
+      const typesense = SearchClient(envs);
+
+      try {
+        const result = (await typesense
+          .collections("institutions")
+          .documents(id)
+          .retrieve()) as Document;
+
+        return c.json(
+          {
+            name: result.name,
+            provider: result.provider,
+            id: result.id,
+            logo: result.logo,
+            available_history: result.available_history,
+            maximum_consent_validity: result.maximum_consent_validity,
+            country: result.countries.at(0),
+            type: result.type,
+          },
+          200,
+        );
+      } catch (error) {
+        const errorResponse = createErrorResponse(error, requestId);
+        return c.json(errorResponse, 404);
       }
     },
   );

@@ -171,7 +171,7 @@ export const connectBankAccountSchema = z.object({
   referenceId: z.string().nullable().optional(), // GoCardLess
   accessToken: z.string().nullable().optional(), // Teller
   enrollmentId: z.string().nullable().optional(), // Teller
-  provider: z.enum(["gocardless", "plaid", "teller"]),
+  provider: z.enum(["gocardless", "plaid", "teller", "enablebanking"]),
   accounts: z.array(
     z.object({
       account_id: z.string(),
@@ -180,9 +180,10 @@ export const connectBankAccountSchema = z.object({
       currency: z.string(),
       name: z.string(),
       institution_id: z.string(),
-      account_reference: z.string().nullable().optional(),
+      account_reference: z.string().nullable().optional(), // EnableBanking & GoCardLess
       enabled: z.boolean(),
       logo_url: z.string().nullable().optional(),
+      expires_at: z.string().nullable().optional(), // EnableBanking & GoCardLess
       type: z.enum([
         "credit",
         "depository",
@@ -428,11 +429,11 @@ export const updateEntriesSchema = z.object({
 });
 
 export const manualSyncTransactionsSchema = z.object({
-  connectionId: z.string().uuid(),
+  connectionId: z.string(),
 });
 
 export const reconnectConnectionSchema = z.object({
-  connectionId: z.string().uuid(),
+  connectionId: z.string(),
   provider: z.string(),
 });
 
@@ -441,6 +442,20 @@ export const createGoCardLessLinkSchema = z.object({
   step: z.string().optional(),
   availableHistory: z.number(),
   redirectBase: z.string(),
+});
+
+export const createEnableBankingLinkSchema = z.object({
+  institutionId: z.string(),
+  maximumConsentValidity: z.number(),
+  country: z.string().optional().nullable(),
+  isDesktop: z.boolean(),
+  type: z.enum(["personal", "business"]),
+});
+
+export const reconnectEnableBankingLinkSchema = z.object({
+  institutionId: z.string(),
+  isDesktop: z.boolean(),
+  sessionId: z.string(),
 });
 
 export const updateInstitutionUsageSchema = z.object({
@@ -639,3 +654,7 @@ export const inboxUploadSchema = z.array(
     file_path: z.array(z.string()),
   }),
 );
+
+export const deleteConnectionSchema = z.object({
+  connectionId: z.string(),
+});

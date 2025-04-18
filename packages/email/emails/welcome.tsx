@@ -70,25 +70,24 @@ export const WelcomeEmail = ({ fullName = "Viktor Hofte" }: Props) => {
               Welcome to Midday! I'm Pontus, one of the founders.
               <br />
               <br />
-              We've been working on Midday for the past months, and during this
-              time, we've implemented the basic functionality to get started.
-              However, with your feedback, we can make the right decisions to
-              help run your business smarter.
+              We built Midday from over 10 years of running our own businesses,
+              knowing firsthand the challenges that come with it. Midday is
+              self-funded and built together with our customers, and it’s
+              important to us that you know we’re here when you need us.
               <br />
               <br />
-              During our beta phase, you may encounter some bugs, but we
-              genuinely want all your feedback.
-              <br />
-              <br />
-              Should you have any questions, please don't hesitate to reply
-              directly to this email or to{" "}
+              Take your time to explore Midday at your own pace. If you ever
+              want to chat with us founders, you can schedule a time{" "}
               <Link
                 href="https://cal.com/pontus-midday/15min"
                 className="text-[#121212] underline"
               >
-                schedule a call with me
+                here
               </Link>
-              .
+              <br />
+              <br />
+              If there’s anything we can do to help, just reply. We’re always
+              one message away.
             </Text>
 
             <br />

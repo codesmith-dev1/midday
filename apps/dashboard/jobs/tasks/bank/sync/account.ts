@@ -20,7 +20,7 @@ export const syncAccount = schemaTask({
     accountId: z.string(),
     accessToken: z.string().optional(),
     errorRetries: z.number().optional(),
-    provider: z.enum(["gocardless", "plaid", "teller"]),
+    provider: z.enum(["gocardless", "plaid", "teller", "enablebanking"]),
     manualSync: z.boolean().optional(),
     accountType: z.enum([
       "credit",
@@ -60,17 +60,28 @@ export const syncAccount = schemaTask({
       const { data: balanceData } = await balanceResponse.json();
 
       // Only update the balance if it's greater than 0
-      const balance = balanceData?.amount ?? undefined;
+      const balance = balanceData?.amount ?? 0;
 
-      // Reset error details and retries if we successfully got the balance
-      await supabase
-        .from("bank_accounts")
-        .update({
-          balance,
-          error_details: null,
-          error_retries: null,
-        })
-        .eq("id", id);
+      if (balance > 0) {
+        // Reset error details and retries if we successfully got the balance
+        await supabase
+          .from("bank_accounts")
+          .update({
+            balance,
+            error_details: null,
+            error_retries: null,
+          })
+          .eq("id", id);
+      } else {
+        // Reset error details and retries if we successfully got the balance
+        await supabase
+          .from("bank_accounts")
+          .update({
+            error_details: null,
+            error_retries: null,
+          })
+          .eq("id", id);
+      }
     } catch (error) {
       const parsedError = parseAPIError(error);
 
@@ -129,7 +140,7 @@ export const syncAccount = schemaTask({
       // This is to avoid memory issues with the DB
       for (let i = 0; i < transactionsData.length; i += BATCH_SIZE) {
         const transactionBatch = transactionsData.slice(i, i + BATCH_SIZE);
-        await upsertTransactions.trigger({
+        await upsertTransactions.triggerAndWait({
           transactions: transactionBatch,
           teamId,
           bankAccountId: id,

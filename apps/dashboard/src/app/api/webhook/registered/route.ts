@@ -1,12 +1,8 @@
 import * as crypto from "node:crypto";
-import { env } from "@/env.mjs";
-import { logger } from "@/utils/logger";
-import { resend } from "@/utils/resend";
-import WelcomeEmail from "@midday/email/emails/welcome";
 import { LogEvents } from "@midday/events/events";
 import { setupAnalytics } from "@midday/events/server";
-import { render } from "@react-email/render";
-import { nanoid } from "nanoid";
+import { tasks } from "@trigger.dev/sdk/v3";
+import type { onboardTeam } from "jobs/tasks/team/onboarding";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -39,9 +35,8 @@ export async function POST(req: Request) {
 
   const body = await req.json();
 
-  const email = body.record.email;
   const userId = body.record.id;
-  const fullName = body.record.raw_user_meta_data.full_name;
+  const fullName = body.record.full_name;
 
   const analytics = await setupAnalytics({
     userId,
@@ -53,35 +48,15 @@ export async function POST(req: Request) {
     channel: LogEvents.Registered.channel,
   });
 
-  if (fullName) {
-    await resend.emails.send({
-      to: email,
-      subject: "Welcome to Midday",
-      from: "Pontus from Midday <pontus@midday.ai>",
-      html: await render(
-        WelcomeEmail({
-          fullName,
-        }),
-      ),
-      headers: {
-        "X-Entity-Ref-ID": nanoid(),
-      },
-    });
-  }
-
-  try {
-    const [firstName, lastName] = fullName?.split(" ") ?? [];
-
-    await resend.contacts.create({
-      email,
-      firstName,
-      lastName,
-      unsubscribed: false,
-      audienceId: env.RESEND_AUDIENCE_ID,
-    });
-  } catch (error) {
-    logger(error as string);
-  }
+  await tasks.trigger<typeof onboardTeam>(
+    "onboard-team",
+    {
+      userId,
+    },
+    {
+      delay: "5m",
+    },
+  );
 
   return NextResponse.json({ success: true });
 }

@@ -10,10 +10,16 @@ import { useState } from "react";
 
 export function FeedbackForm() {
   const [value, setValue] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   const action = useAction(sendFeebackAction, {
     onSuccess: () => {
       setValue("");
+      setSubmitted(true);
+
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 3000);
     },
   });
 
@@ -24,7 +30,7 @@ export function FeedbackForm() {
           variant="outline"
           className="rounded-full font-normal h-[32px] p-0 px-3 text-xs text-[#878787]"
         >
-          Beta feedback
+          Feedback
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -32,7 +38,7 @@ export function FeedbackForm() {
         sideOffset={10}
         align="end"
       >
-        {action.status === "hasSucceeded" ? (
+        {submitted ? (
           <div className="flex items-center justify-center flex-col space-y-1 mt-10 text-center">
             <p className="font-medium text-sm">Thank you for your feedback!</p>
             <p className="text-sm text-[#4C4C4C]">

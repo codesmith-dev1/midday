@@ -159,10 +159,6 @@ export const LogEvents = {
     name: "MFA Verify",
     channel: "security",
   },
-  SendFeedback: {
-    name: "Send Feedback",
-    channel: "feedback",
-  },
   InboxInbound: {
     name: "Inbox Inbound",
     channel: "inbox",
@@ -174,6 +170,10 @@ export const LogEvents = {
   SupportTicket: {
     name: "Support Ticket",
     channel: "support",
+  },
+  SendFeedback: {
+    name: "Send Feedback",
+    channel: "feedback",
   },
   CategoryCreate: {
     name: "Category Create",
@@ -257,6 +257,22 @@ export const LogEvents = {
   },
   ReconnectConnection: {
     name: "Reconnect Connection",
+    channel: "bank",
+  },
+  EnableBankingLinkReconnected: {
+    name: "Enable Banking Link Reconnected",
+    channel: "enablebanking",
+  },
+  EnableBankingLinkCreated: {
+    name: "Enable Banking Link Created",
+    channel: "enablebanking",
+  },
+  EnableBankingLinkFailed: {
+    name: "Enable Banking Link Failed",
+    channel: "enablebanking",
+  },
+  DeleteConnection: {
+    name: "Delete Connection",
     channel: "bank",
   },
 };

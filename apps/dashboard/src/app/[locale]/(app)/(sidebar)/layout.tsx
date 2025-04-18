@@ -3,6 +3,7 @@ import { DefaultSettings } from "@/components/default-settings.server";
 import { Header } from "@/components/header";
 import { GlobalSheets } from "@/components/sheets/global-sheets";
 import { Sidebar } from "@/components/sidebar";
+import { TrialEnded } from "@/components/trial-ended.server";
 import { UserProvider } from "@/store/user/provider";
 import { setupAnalytics } from "@midday/events/server";
 import { getCountryCode, getCurrency } from "@midday/location";
@@ -110,6 +111,14 @@ export default async function Layout({
 
           <Suspense>
             <GlobalSheets defaultCurrency={currency} />
+          </Suspense>
+
+          <Suspense>
+            <TrialEnded
+              createdAt={user.data.team?.created_at}
+              plan={user.data.team?.plan}
+              teamId={user.data.team?.id}
+            />
           </Suspense>
 
           <Suspense>
